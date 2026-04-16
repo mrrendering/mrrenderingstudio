@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR Rendering — 3D Architectural Visualization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dark:#0a0a0a;
+  --dark2:#111111;
+  --dark3:#1a1a1a;
+  --mid:#2a2a2a;
+  --border:#2e2e2e;
+  --gold:#c8a96e;
+  --gold2:#e8c98e;
+  --white:#f5f2ee;
+  --muted:#888;
+  --light:#ddd;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--dark);
+  color:var(--white);
+  font-family:'Barlow',sans-serif;
+  font-weight:300;
+  overflow-x:hidden;
+  line-height:1.6;
+}
+a{color:inherit;text-decoration:none}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 48px;
+  background:rgba(10,10,10,0.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(200,169,110,0.1);
+}
+.nav-logo{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:600;font-size:22px;letter-spacing:3px;
+  color:var(--white);
+}
+.nav-logo span{color:var(--gold)}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);transition:color .3s;
+}
+.nav-links a:hover{color:var(--gold)}
+.nav-cta{
+  padding:10px 24px;
+  border:1px solid var(--gold);
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);
+  transition:all .3s;cursor:pointer;
+  font-family:'Barlow',sans-serif;
+}
+.nav-cta:hover{background:var(--gold);color:var(--dark)}
+
+/* HERO */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:120px 48px 80px;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(135deg, rgba(200,169,110,0.04) 0%, transparent 50%),
+    linear-gradient(to bottom, rgba(10,10,10,0) 60%, rgba(10,10,10,1) 100%);
+  z-index:0;
+}
+.hero-grid-lines{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(200,169,110,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,169,110,0.05) 1px, transparent 1px);
+  background-size:80px 80px;
+  z-index:0;
+}
+.hero-content{position:relative;z-index:1;max-width:900px}
+.hero-label{
+  font-size:11px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:32px;
+  display:flex;align-items:center;gap:16px;
+}
+.hero-label::before{content:'';width:40px;height:1px;background:var(--gold);display:block}
+.hero-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(56px, 9vw, 120px);
+  font-weight:300;line-height:0.95;
+  letter-spacing:-2px;
+  margin-bottom:8px;
+}
+.hero-title em{
+  font-style:italic;color:var(--gold);
+}
+.hero-title .line2{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:600;font-size:clamp(48px, 7.5vw, 100px);
+  letter-spacing:4px;color:var(--light);
+}
+.hero-sub{
+  font-size:15px;color:var(--muted);
+  max-width:480px;line-height:1.8;
+  margin:40px 0 56px;
+}
+.hero-actions{display:flex;gap:20px;align-items:center}
+.btn-primary{
+  padding:16px 40px;background:var(--gold);color:var(--dark);
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  font-weight:600;font-family:'Barlow',sans-serif;
+  transition:all .3s;cursor:pointer;border:none;
+  display:inline-block;
+}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-2px)}
+.btn-ghost{
+  padding:16px 40px;border:1px solid rgba(255,255,255,0.2);
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--light);transition:all .3s;cursor:pointer;
+  display:inline-block;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.hero-stats{
+  position:absolute;right:48px;bottom:80px;z-index:1;
+  display:flex;flex-direction:column;gap:32px;align-items:flex-end;
+}
+.stat{text-align:right}
+.stat-num{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:42px;font-weight:600;line-height:1;
+  color:var(--white);
+}
+.stat-num span{color:var(--gold)}
+.stat-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.hero-scroll{
+  position:absolute;bottom:40px;left:48px;z-index:1;
+  display:flex;align-items:center;gap:16px;
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
+}
+.scroll-line{width:60px;height:1px;background:rgba(200,169,110,0.4)}
+
+/* MARQUEE */
+.marquee-wrap{
+  background:var(--gold);padding:14px 0;overflow:hidden;
+  border-top:1px solid rgba(200,169,110,0.2);
+}
+.marquee-track{
+  display:flex;gap:0;white-space:nowrap;
+  animation:marquee 25s linear infinite;
+}
+.marquee-item{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--dark);font-weight:600;
+  padding:0 32px;
+}
+.marquee-dot{color:rgba(10,10,10,0.3)}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* SECTION COMMON */
+section{padding:100px 48px}
+.section-label{
+  font-size:11px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:16px;
+  display:flex;align-items:center;gap:16px;
+}
+.section-label::before{content:'';width:24px;height:1px;background:var(--gold);display:block}
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(36px,5vw,64px);font-weight:300;line-height:1.1;
+  margin-bottom:16px;
+}
+.section-title em{font-style:italic;color:var(--gold)}
+
+/* SERVICES */
+.services{background:var(--dark2)}
+.services-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  margin-top:60px;background:var(--border);
+}
+.service-card{
+  background:var(--dark2);padding:48px 36px;
+  position:relative;overflow:hidden;
+  transition:background .4s;
+  display:block;
+}
+.service-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--gold);transform:scaleX(0);transform-origin:left;
+  transition:transform .4s;
+}
+.service-card:hover{background:var(--dark3)}
+.service-card:hover::before{transform:scaleX(1)}
+.service-num{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;letter-spacing:2px;color:var(--gold);
+  margin-bottom:32px;opacity:0.7;
+}
+.service-icon{margin-bottom:24px}
+.service-icon svg{width:36px;height:36px;stroke:var(--gold);fill:none;stroke-width:1}
+.service-name{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:22px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:16px;
+  color:var(--white);
+}
+.service-desc{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:32px}
+.service-link{
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);display:flex;align-items:center;gap:8px;
+}
+.service-link::after{content:'→';transition:transform .3s}
+.service-card:hover .service-link::after{transform:translateX(6px)}
+
+/* WHY US */
+.why-us{background:var(--dark)}
+.why-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:60px;align-items:start}
+.why-visual{
+  position:relative;background:var(--dark3);
+  border:1px solid var(--border);
+  padding:60px 48px;
+}
+.why-visual-accent{
+  position:absolute;top:-1px;left:48px;width:80px;height:2px;background:var(--gold);
+}
+.why-big-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:140px;font-weight:300;line-height:1;
+  color:rgba(200,169,110,0.1);letter-spacing:-8px;
+  position:absolute;top:20px;right:20px;z-index:0;
+}
+.why-features{display:flex;flex-direction:column;gap:0}
+.why-item{
+  padding:32px 0;border-bottom:1px solid var(--border);
+  display:flex;gap:24px;align-items:flex-start;
+}
+.why-item:first-child{padding-top:0}
+.why-num{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;color:var(--gold);letter-spacing:1px;
+  min-width:28px;padding-top:4px;
+}
+.why-text h4{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:18px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:8px;color:var(--white);
+}
+.why-text p{font-size:13px;color:var(--muted);line-height:1.8}
+
+/* PORTFOLIO */
+.portfolio{background:var(--dark2)}
+.portfolio-intro{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:60px;
+}
+.portfolio-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:auto auto;
+  gap:2px;
+  background:var(--border);
+}
+.portfolio-item{
+  background:var(--dark3);
+  position:relative;overflow:hidden;
+  display:flex;align-items:flex-end;
+  min-height:300px;
+  cursor:pointer;
+}
+.portfolio-item.large{grid-row:span 2;min-height:500px}
+.portfolio-placeholder{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:12px;
+}
+.portfolio-visual{
+  width:100%;height:100%;
+  background:linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+  position:relative;overflow:hidden;
+}
+.portfolio-visual::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(200,169,110,0.1) 0%,transparent 60%);
+}
+.arch-shape{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:60%;height:70%;
+  border:1px solid rgba(200,169,110,0.15);
+  border-bottom:none;
+}
+.arch-shape::after{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:60%;height:80%;
+  border:1px solid rgba(200,169,110,0.1);
+  border-bottom:none;
+}
+.arch-window{
+  position:absolute;top:10%;left:10%;right:10%;
+  height:40%;background:rgba(200,169,110,0.05);
+  border:1px solid rgba(200,169,110,0.1);
+}
+.portfolio-info{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:24px 28px;
+  background:linear-gradient(to top,rgba(10,10,10,0.95) 0%,transparent 100%);
+  transform:translateY(60px);transition:transform .4s;
+}
+.portfolio-item:hover .portfolio-info{transform:translateY(0)}
+.portfolio-cat{
+  font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:6px;
+}
+.portfolio-name{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:20px;font-weight:600;letter-spacing:1px;color:var(--white);
+}
+.portfolio-item:hover .portfolio-visual::after{
+  background:linear-gradient(135deg,rgba(200,169,110,0.2) 0%,transparent 60%);
+}
+
+/* PROCESS */
+.process{background:var(--dark)}
+.process-steps{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);margin-top:60px;
+}
+.step{
+  background:var(--dark);padding:40px 28px;
+  position:relative;
+}
+.step-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:64px;font-weight:300;line-height:1;
+  color:rgba(200,169,110,0.15);margin-bottom:24px;
+}
+.step-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:16px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:12px;color:var(--white);
+}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.8}
+.step-line{
+  position:absolute;top:40px;right:0;width:1px;height:40px;
+  background:var(--gold);opacity:0.4;
+}
+.step:last-child .step-line{display:none}
+
+/* SAVINGS */
+.savings{
+  background:var(--gold);
+  padding:80px 48px;
+  text-align:center;
+}
+.savings-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:120px;font-weight:300;line-height:1;
+  color:var(--dark);letter-spacing:-4px;
+}
+.savings-label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:18px;font-weight:600;letter-spacing:4px;
+  text-transform:uppercase;color:var(--dark);
+  margin-bottom:24px;
+}
+.savings-sub{font-size:15px;color:rgba(10,10,10,0.6);max-width:440px;margin:0 auto 40px}
+.btn-dark{
+  padding:16px 48px;background:var(--dark);color:var(--gold);
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  font-weight:600;font-family:'Barlow',sans-serif;
+  transition:all .3s;display:inline-block;cursor:pointer;
+}
+.btn-dark:hover{background:var(--dark2)}
+
+/* CONTACT */
+.contact{background:var(--dark2)}
+.contact-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.contact-info{padding-top:16px}
+.contact-detail{margin-top:48px;display:flex;flex-direction:column;gap:24px}
+.contact-row{display:flex;gap:16px;align-items:flex-start;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.contact-icon{
+  width:36px;height:36px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.contact-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.5}
+.contact-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.contact-val{font-size:14px;color:var(--white)}
+.contact-form{background:var(--dark3);border:1px solid var(--border);padding:48px}
+.form-row{margin-bottom:24px}
+.form-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:10px}
+.form-input{
+  width:100%;background:transparent;border:1px solid var(--border);
+  padding:14px 16px;color:var(--white);font-family:'Barlow',sans-serif;
+  font-size:14px;transition:border-color .3s;outline:none;
+}
+.form-input:focus{border-color:var(--gold)}
+.form-input::placeholder{color:rgba(136,136,136,0.5)}
+textarea.form-input{resize:vertical;min-height:100px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-submit{
+  width:100%;padding:18px;background:var(--gold);color:var(--dark);
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;
+  font-family:'Barlow',sans-serif;border:none;cursor:pointer;transition:background .3s;
+}
+.form-submit:hover{background:var(--gold2)}
+
+/* FOOTER */
+footer{
+  background:var(--dark);border-top:1px solid var(--border);
+  padding:60px 48px 40px;
+}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px}
+.footer-logo{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:28px;font-weight:600;letter-spacing:4px;
+}
+.footer-logo span{color:var(--gold)}
+.footer-tagline{font-size:12px;color:var(--muted);margin-top:8px;letter-spacing:1px}
+.footer-links{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.footer-col h5{
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:20px;
+}
+.footer-col a{
+  display:block;font-size:13px;color:var(--muted);
+  margin-bottom:10px;transition:color .3s;
+}
+.footer-col a:hover{color:var(--white)}
+.footer-bottom{
+  border-top:1px solid var(--border);padding-top:32px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-copy{font-size:12px;color:rgba(136,136,136,0.5);letter-spacing:1px}
+.social-links{display:flex;gap:16px}
+.social-link{
+  width:36px;height:36px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--muted);transition:all .3s;letter-spacing:1px;
+}
+.social-link:hover{border-color:var(--gold);color:var(--gold)}
+
+@media(max-width:900px){
+  nav{padding:16px 24px}
+  .nav-links{display:none}
+  section{padding:60px 24px}
+  .hero{padding:100px 24px 60px}
+  .hero-stats{display:none}
+  .services-grid{grid-template-columns:1fr}
+  .why-layout,.contact-layout,.portfolio-intro{grid-template-columns:1fr;flex-direction:column}
+  .portfolio-grid{grid-template-columns:1fr}
+  .portfolio-item.large{grid-row:span 1}
+  .process-steps{grid-template-columns:1fr 1fr}
+  .footer-links{grid-template-columns:1fr}
+  .footer-top{flex-direction:column;gap:32px}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://mrrendering.com/" class="nav-logo">MR<span> </span>RENDERING</a>
+  <ul class="nav-links">
+    <li><a href="https://mrrendering.com/">Home</a></li>
+    <li><a href="https://mrrendering.com/portfolio/">Portfolio</a></li>
+    <li><a href="https://mrrendering.com/services/">Services</a></li>
+    <li><a href="https://mrrendering.com/about-us/">About</a></li>
+    <li><a href="https://mrrendering.com/3d-rendering-expert/">Blog</a></li>
+  </ul>
+  <a href="https://mrrendering.com/contact/" class="nav-cta">Get a Quote</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-lines"></div>
+  <div class="hero-content">
+    <div class="hero-label">3D Architectural Visualization Studio</div>
+    <h1 class="hero-title">
+      We Turn <em>Ideas</em><br>
+      <span class="line2">Into Reality</span>
+    </h1>
+    <p class="hero-sub">
+      Premium photorealistic rendering for architects, developers, and real estate professionals worldwide — delivered with precision, on time, and up to 60% more cost-efficient.
+    </p>
+    <div class="hero-actions">
+      <a href="https://mrrendering.com/contact/" class="btn-primary">Start a Project</a>
+      <a href="https://mrrendering.com/portfolio/" class="btn-ghost">View Portfolio</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">15<span>+</span></div>
+      <div class="stat-label">Years Experience</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">30<span>+</span></div>
+      <div class="stat-label">In-house Artists</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">60<span>%</span></div>
+      <div class="stat-label">Cost Savings</div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    Scroll to explore
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">Exterior Rendering <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Interior Visualization <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">CG Animation <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Virtual Tours <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Floor Plans <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Photomontage <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Exterior Rendering <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Interior Visualization <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">CG Animation <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Virtual Tours <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Floor Plans <span class="marquee-dot">●</span></span>
+    <span class="marquee-item">Photomontage <span class="marquee-dot">●</span></span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="section-label">What We Offer</div>
+  <h2 class="section-title">Our <em>Services</em></h2>
+  <div class="services-grid">
+
+    <a href="https://mrrendering.com/services/3d-exterior-rendering/" class="service-card">
+      <div class="service-num">01</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 36 36"><rect x="4" y="16" width="28" height="16"/><polygon points="4,16 18,4 32,16"/><rect x="14" y="22" width="8" height="10"/></svg>
+      </div>
+      <div class="service-name">3D Exterior Rendering</div>
+      <p class="service-desc">Photorealistic visuals that showcase architecture, landscape, and environment in stunning detail.</p>
+      <div class="service-link">See More</div>
+    </a>
+
+    <a href="https://mrrendering.com/services/3d-interior-rendering/" class="service-card">
+      <div class="service-num">02</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 36 36"><rect x="4" y="4" width="28" height="28"/><line x1="4" y1="18" x2="32" y2="18"/><line x1="18" y1="4" x2="18" y2="32"/><circle cx="18" cy="18" r="4"/></svg>
+      </div>
+      <div class="service-name">3D Interior Rendering</div>
+      <p class="service-desc">Detailed interiors with lifelike lighting, rich textures, and immersive atmosphere that sell the vision.</p>
+      <div class="service-link">See More</div>
+    </a>
+
+    <a href="https://mrrendering.com/services/cg-animation/" class="service-card">
+      <div class="service-num">03</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14"/><polygon points="14,12 28,18 14,24"/></svg>
+      </div>
+      <div class="service-name">CG Animation</div>
+      <p class="service-desc">Dynamic 3D videos that present your project with cinematic motion and compelling storytelling.</p>
+      <div class="service-link">See More</div>
+    </a>
+
+    <a href="https://mrrendering.com/services/3d-virtual-tours/" class="service-card">
+      <div class="service-num">04</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12"/><ellipse cx="18" cy="18" rx="12" ry="5"/><line x1="18" y1="6" x2="18" y2="30"/></svg>
+      </div>
+      <div class="service-name">3D Virtual Tours</div>
+      <p class="service-desc">Interactive 360° walkthroughs that give clients an immersive, self-guided spatial experience.</p>
+      <div class="service-link">See More</div>
+    </a>
+
+    <a href="https://mrrendering.com/services/3d-floor-plan/" class="service-card">
+      <div class="service-num">05</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 36 36"><rect x="4" y="4" width="28" height="28"/><rect x="10" y="10" width="10" height="10"/><rect x="22" y="14" width="6" height="14"/><line x1="10" y1="24" x2="20" y2="24"/></svg>
+      </div>
+      <div class="service-name">3D Floor Plan</div>
+      <p class="service-desc">Clear, accurate 3D layouts that communicate space planning and functional flow with precision.</p>
+      <div class="service-link">See More</div>
+    </a>
+
+    <a href="https://mrrendering.com/services/3d-photomontage-rendering/" class="service-card">
+      <div class="service-num">06</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 36 36"><rect x="2" y="8" width="22" height="20" rx="1"/><rect x="12" y="4" width="22" height="20" rx="1" opacity="0.4"/><circle cx="9" cy="16" r="3"/><polyline points="2,22 9,15 14,20 18,16 24,22"/></svg>
+      </div>
+      <div class="service-name">3D Photomontage</div>
+      <p class="service-desc">Seamless integration of architectural 3D designs into real-world photographic environments.</p>
+      <div class="service-link">See More</div>
+    </a>
+
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-us" id="about">
+  <div class="why-layout">
+    <div>
+      <div class="section-label">Why MR Rendering</div>
+      <h2 class="section-title">What Sets <em>Us Apart</em></h2>
+      <p style="font-size:15px;color:var(--muted);line-height:1.9;margin-top:24px;">
+        Vietnam-based with a global mindset — we combine 15+ years of architectural expertise with a lean, responsive team to deliver exceptional quality at a fraction of what local studios charge.
+      </p>
+      <a href="https://mrrendering.com/about-us/" class="btn-ghost" style="margin-top:40px;display:inline-block">About Our Studio</a>
+    </div>
+    <div class="why-features">
+      <div class="why-item">
+        <div class="why-num">01</div>
+        <div class="why-text">
+          <h4>High-End Visuals, Optimized Investment</h4>
+          <p>Achieve up to 60% cost savings compared to local studios, without any compromise on the quality of your architectural visuals.</p>
+        </div>
+      </div>
+      <div class="why-item">
+        <div class="why-num">02</div>
+        <div class="why-text">
+          <h4>Consistency You Can Rely On</h4>
+          <p>Every image aligns with your brand standards. Transparent communication and continuous feedback loops ensure outstanding results every time.</p>
+        </div>
+      </div>
+      <div class="why-item">
+        <div class="why-num">03</div>
+        <div class="why-text">
+          <h4>Scalable Production, On Schedule</h4>
+          <p>With 30+ in-house artists, we handle projects of any scale with speed and precision — from single renderings to full campaign packages.</p>
+        </div>
+      </div>
+      <div class="why-item">
+        <div class="why-num">04</div>
+        <div class="why-text">
+          <h4>Outsource Partnership Ready</h4>
+          <p>We act as a seamless extension of your studio — reliable, discreet, and fully aligned with your workflow and delivery standards.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section class="portfolio" id="portfolio">
+  <div class="portfolio-intro">
+    <div>
+      <div class="section-label">Our Work</div>
+      <h2 class="section-title">Selected <em>Projects</em></h2>
+    </div>
+    <a href="https://mrrendering.com/portfolio/" class="btn-ghost" style="flex-shrink:0">Full Portfolio →</a>
+  </div>
+  <div class="portfolio-grid">
+    <div class="portfolio-item large">
+      <div class="portfolio-visual" style="min-height:500px">
+		<img src="img/3.jpg" alt="Alternate text" width="100%" height="100%">
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-cat">Exterior Rendering</div>
+        <div class="portfolio-name">Luxury Residential Tower</div>
+      </div>
+    </div>
+    <div class="portfolio-item">
+      <div class="portfolio-visual" style="min-height:240px">
+        <div style="position:absolute;inset:0;background:linear-gradient(120deg,#12100e 0%,#1a1610 100%)"></div>
+        <div style="position:absolute;top:10%;left:10%;right:10%;bottom:10%;border:1px solid rgba(200,169,110,0.1)"></div>
+        <div style="position:absolute;top:20%;left:20%;right:20%;bottom:20%;background:rgba(200,169,110,0.04);border:1px solid rgba(200,169,110,0.08)"></div>
+        <div style="position:absolute;top:35%;left:35%;right:35%;bottom:35%;background:rgba(200,169,110,0.06)"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(10,10,10,0.7) 0%,transparent 50%)"></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-cat">Interior Rendering</div>
+        <div class="portfolio-name">Modern Living Space</div>
+      </div>
+    </div>
+    <div class="portfolio-item">
+      <div class="portfolio-visual" style="min-height:240px">
+        <div style="position:absolute;inset:0;background:linear-gradient(200deg,#0e1214 0%,#0a0d0e 100%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:50%;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;padding:1px">
+          <div style="background:rgba(200,169,110,0.05)"></div><div style="background:rgba(200,169,110,0.08)"></div>
+          <div style="background:rgba(200,169,110,0.04)"></div><div style="background:rgba(200,169,110,0.07)"></div>
+          <div style="background:rgba(200,169,110,0.05)"></div><div style="background:rgba(200,169,110,0.09)"></div>
+        </div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(10,10,10,0.7) 0%,transparent 50%)"></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-cat">CG Animation</div>
+        <div class="portfolio-name">Commercial Complex Walkthrough</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process">
+  <div class="section-label">How It Works</div>
+  <h2 class="section-title">Our <em>Process</em></h2>
+  <div class="process-steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Brief & Scope</div>
+      <p class="step-desc">Share your vision, drawings, references, and deadlines. We analyze and provide a custom proposal within 24 hours.</p>
+      <div class="step-line"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">3D Modeling</div>
+      <p class="step-desc">Our artists build precise 3D models from your CAD files or sketches, aligning every dimension with your design intent.</p>
+      <div class="step-line"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Render & Revise</div>
+      <p class="step-desc">You receive preview renders for feedback. We refine lighting, materials, and composition until every detail is perfect.</p>
+      <div class="step-line"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">Final Delivery</div>
+      <p class="step-desc">High-resolution final files delivered in your preferred format — ready for presentations, marketing, and construction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SAVINGS BANNER -->
+<div class="savings">
+  <div class="savings-label">Cost Advantage</div>
+  <div class="savings-num">60%</div>
+  <div class="savings-label">Average Savings vs. Local Studios</div>
+  <p class="savings-sub">Premium quality at a fraction of the cost — that's the MR Rendering promise for architects and developers worldwide.</p>
+  <a href="https://mrrendering.com/rendering-studio/" class="btn-dark">Explore Outsourcing</a>
+</div>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="contact-layout">
+    <div class="contact-info">
+      <div class="section-label">Get In Touch</div>
+      <h2 class="section-title">Start Your <em>Project</em></h2>
+      <p style="font-size:15px;color:var(--muted);line-height:1.9;margin-top:24px;">
+        Tell us about your project and get a free consultation plus a custom quote within 24 hours.
+      </p>
+      <div class="contact-detail">
+        <div class="contact-row">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-val">info@mrrendering.com</div>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.83-1.83a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div>
+            <div class="contact-label">Phone / WhatsApp</div>
+            <div class="contact-val">+84 935 405 291</div>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div>
+            <div class="contact-label">Head Office</div>
+            <div class="contact-val">901 Main St, Dallas, TX 75202, USA</div>
+          </div>
+        </div>
+        <div class="contact-row" style="border:none">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          </div>
+          <div>
+            <div class="contact-label">Working Hours</div>
+            <div class="contact-val">Mon–Fri 7:30 AM–5:30 PM | Sat 7:30 AM–11:30 AM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-form">
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">First Name</label>
+          <input type="text" class="form-input" placeholder="John">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Last Name</label>
+          <input type="text" class="form-input" placeholder="Smith">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" placeholder="john@studio.com">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Service Required</label>
+        <select class="form-input" style="appearance:none;cursor:pointer">
+          <option value="">Select a service</option>
+          <option>3D Exterior Rendering</option>
+          <option>3D Interior Rendering</option>
+          <option>CG Animation</option>
+          <option>3D Virtual Tours</option>
+          <option>3D Floor Plan</option>
+          <option>3D Photomontage</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Project Details</label>
+        <textarea class="form-input" placeholder="Tell us about your project, timeline, and any specific requirements..."></textarea>
+      </div>
+      <a href="https://mrrendering.com/contact/" class="form-submit" style="display:block;text-align:center;text-decoration:none">Send Message →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo">MR<span>.</span>RENDERING</div>
+      <div class="footer-tagline">3D Architectural Visualization Studio — Vietnam, Global</div>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h5>Services</h5>
+        <a href="https://mrrendering.com/services/3d-exterior-rendering/">Exterior Rendering</a>
+        <a href="https://mrrendering.com/services/3d-interior-rendering/">Interior Rendering</a>
+        <a href="https://mrrendering.com/services/cg-animation/">CG Animation</a>
+        <a href="https://mrrendering.com/services/3d-virtual-tours/">Virtual Tours</a>
+        <a href="https://mrrendering.com/services/3d-floor-plan/">Floor Plans</a>
+        <a href="https://mrrendering.com/services/3d-photomontage-rendering/">Photomontage</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="https://mrrendering.com/">Home</a>
+        <a href="https://mrrendering.com/about-us/">About Us</a>
+        <a href="https://mrrendering.com/portfolio/">Portfolio</a>
+        <a href="https://mrrendering.com/rendering-studio/">Outsource</a>
+        <a href="https://mrrendering.com/3d-rendering-expert/">Blog</a>
+        <a href="https://mrrendering.com/contact/">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <a href="https://mrrendering.com/3d-rendering-expert/">3D Rendering Expert</a>
+        <a href="https://mrrendering.com/architecture-insight/">Architecture Insights</a>
+        <a href="https://mrrendering.com/real-estate-marketing/">Real Estate Marketing</a>
+        <a href="https://mrrendering.com/case-studies/">Case Studies</a>
+        <a href="https://mrrendering.com/privacy-policy/">Privacy Policy</a>
+        <a href="https://mrrendering.com/terms-of-service/">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 MR Rendering. All rights reserved.</div>
+    <div class="social-links">
+      <a href="https://www.facebook.com/mrrenderingstudio/" class="social-link">FB</a>
+      <a href="https://www.instagram.com/mrrenderingstudio/" class="social-link">IG</a>
+      <a href="https://www.behance.net/MRRenderingstudio" class="social-link">BE</a>
+      <a href="https://www.linkedin.com/company/mr-rendering/" class="social-link">LI</a>
+      <a href="https://www.youtube.com/@MRRendering" class="social-link">YT</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('a[href^="https://mrrendering.com"], a[href^="https://www.facebook"], a[href^="https://www.instagram"], a[href^="https://www.behance"], a[href^="https://www.linkedin"], a[href^="https://www.youtube"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    if(typeof openLink==='function') openLink(a.href);
+    else window.open(a.href,'_blank');
+  });
+});
+const nav=document.querySelector('nav');
+window.addEventListener('scroll',()=>{
+  if(window.scrollY>50) nav.style.borderBottomColor='rgba(200,169,110,0.2)';
+  else nav.style.borderBottomColor='rgba(200,169,110,0.1)';
+});
+document.querySelectorAll('.service-card, .portfolio-item').forEach(el=>{
+  el.style.transition='all .4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+});
+</script>
+</body>
+</html>
